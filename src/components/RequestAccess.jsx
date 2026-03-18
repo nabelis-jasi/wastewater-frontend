@@ -1,6 +1,6 @@
 // RequestAccess.jsx
 import { useState } from "react";
-import { supabase } from "./supabaseClient";
+import { supabase } from "../supabaseClient";
 
 export default function RequestAccess() {
   const [email, setEmail] = useState("");
