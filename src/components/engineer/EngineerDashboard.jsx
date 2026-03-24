@@ -59,8 +59,8 @@ export default function EngineerDashboard({ manholes, pipes, userId, role, onDat
         <div className="wd-brand">
           <div className="wd-brand-logo">🪣</div>
           <div>
-            <div className="wd-brand-name">WasteGIS</div>
-            <div className="wd-brand-tagline">Wastewater Network Command</div>
+            <div className="wd-brand-name">WWGIS</div>
+            <div className="wd-brand-tagline">Wastewater Network</div>
           </div>
         </div>
 
