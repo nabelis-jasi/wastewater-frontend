@@ -3,6 +3,7 @@ import DataEditor from './DataEditor';
 import ShapefileUploader from './ShapefileUploader';
 import DataSync from './DataSync';
 import FlagManager from './FlagManager';
+import MapView from '../MapView';
 
 export default function EngineerDashboard({ manholes, pipes, userId, role, onDataRefresh }) {
   const [activePanel, setActivePanel] = useState(null);
