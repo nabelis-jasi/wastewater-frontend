@@ -1,4 +1,4 @@
-udate collector profil panel using the import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { supabase } from '../../supabaseClient';
 
 export default function ProfilePanel({ userId, role, userProfile, onClose }) {
