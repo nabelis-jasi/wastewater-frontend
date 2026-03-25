@@ -5,7 +5,7 @@ export default function CollectorProfilePanel({ userId, role, userProfile, onClo
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(userProfile?.full_name || 'Field Collector');
   const [phone, setPhone] = useState(userProfile?.phone || '');
-  const [dept, setDept] = useState(userProfile?.department || 'Field Operations');
+  const [dept, setDept] = useState(userProfile?.department || 'Engineering');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
