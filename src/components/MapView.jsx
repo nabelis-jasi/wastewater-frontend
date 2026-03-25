@@ -247,7 +247,84 @@ function TileSelector({ activeTiles, setActiveTiles }) {
     </div>
   );
 }
-
+{/* ── LEGEND ───────────────────────────────────────────────────── */}
+{showLegend ? (
+  <div style={{
+    ...glass,
+    position: "absolute",
+    bottom: 36, left: 12,
+    zIndex: 900,
+    padding: "10px 14px",
+    minWidth: 210,
+  }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+      <span style={{
+        fontFamily: "'Barlow Condensed',sans-serif",
+        fontSize: 11,
+        fontWeight: 800,
+        letterSpacing: "0.12em",
+        textTransform: "uppercase",
+        color: "#8fdc00"
+      }}>
+        Legend
+      </span>
+      <button onClick={() => setShowLegend(false)}
+        style={{
+          background: "none",
+          border: "none",
+          color: "#3d6e3d",
+          cursor: "pointer",
+          fontSize: 14,
+          padding: 0
+        }}>
+        ×
+      </button>
+    </div>
+    {[
+      { color: "#2b7bff", type: "line", label: "Pipeline — Normal" },
+      { color: "#dc3545", type: "line", label: "Pipeline — Blocked" },
+      { color: "#7F00FF", type: "manhole", label: "Manhole — Normal" },
+      { color: "#FFA500", type: "manhole", label: "Manhole — Maintenance" },
+      { color: "#FF0000", type: "manhole", label: "Manhole — Blocked" },
+    ].map((item) => (
+      <div key={item.label} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
+        {item.type === "line"
+          ? <div style={{ width: 22, height: 4, borderRadius: 2, background: item.color, flexShrink: 0 }} />
+          : <div style={{
+              width: 16,
+              height: 16,
+              borderRadius: "50%",
+              background: item.color,
+              border: "2px solid white",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.3)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 7,
+              flexShrink: 0,
+            }}>🕳️</div>
+        }
+        <span style={{ fontSize: 11, color: "#b8dcb8" }}>{item.label}</span>
+      </div>
+    ))}
+  </div>
+) : (
+  <button
+    onClick={() => setShowLegend(true)}
+    style={{
+      ...glass,
+      position: "absolute", bottom: 36, left: 12, zIndex: 900,
+      padding: "5px 12px", cursor: "pointer",
+      border: "1px solid rgba(45,138,45,0.25)",
+      fontFamily: "'Barlow Condensed',sans-serif",
+      fontSize: 11, fontWeight: 700,
+      letterSpacing: "0.08em", textTransform: "uppercase",
+      color: "#7ab87a",
+    }}
+  >
+    📋 Legend
+  </button>
+)}
 // ═════════════════════════════════════════════════════════════════════════
 export default function MapView({
   manholes = [],
