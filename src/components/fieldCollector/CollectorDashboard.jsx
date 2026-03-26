@@ -1,11 +1,10 @@
 import React, { useState, useRef } from 'react';
 import MapView from '../MapView';
-import DataCollection from './DataCollection';
 import FlagFeature from './FlagFeature';
 import SyncData from './SyncData';
 import CollectorHome from './CollectorHome';
-import CollectorForm from './CollectorForm';
-
+import AvailableForms from './AvailableForms';
+import DynamicForm from './DynamicForm';
 import CollectorProfilePanel from './CollectorProfilePanel';
 import CollectorSettingsPanel from './CollectorSettingsPanel';
 
@@ -21,6 +20,7 @@ export default function CollectorDashboard({
   userProfile
 }) {
   const [activePanel, setActivePanel] = useState(null);
+  const [selectedForm, setSelectedForm] = useState(null); // for DynamicForm
   const [mapInstance, setMapInstance] = useState(null);
 
   // ── PICK MODE ─────────────────────────────
@@ -50,11 +50,23 @@ export default function CollectorDashboard({
     onDataRefresh();
   };
 
-  const toggle = (id) => setActivePanel(prev => prev === id ? null : id);
+  const toggle = (id) => {
+    setActivePanel(prev => prev === id ? null : id);
+    setSelectedForm(null); // reset when switching panels
+  };
+
+  const handleSelectForm = (form) => {
+    setSelectedForm(form);
+  };
+
+  const handleFormSubmitted = () => {
+    setSelectedForm(null);
+    handleDataRefreshed();
+  };
 
   const tools = [
     { id: 'home', icon: '🏠', label: 'Home', color: '#4aad4a' },
-    { id: 'collect', icon: '📍', label: 'Collect', color: '#8fdc00' },
+    { id: 'forms', icon: '📋', label: 'Forms', color: '#8fdc00' }, // replaces old 'collect'
     { id: 'flag', icon: '🚩', label: 'Flag', color: '#f59e0b' },
     { id: 'sync', icon: '🔄', label: 'Sync', color: '#22d3ee' },
   ];
@@ -92,7 +104,7 @@ export default function CollectorDashboard({
           )}
         </div>
 
-        {/* ── ACTIONS (ENGINEER STYLE) ── */}
+        {/* ── ACTIONS ── */}
         <div className="wd-topbar-actions">
 
           <button
@@ -164,15 +176,24 @@ export default function CollectorDashboard({
         />
       )}
 
-      {activePanel === 'collect' && (
-        <DataCollection
-          userId={userId}
-          map={mapInstance}
-          onDataCollected={handleDataRefreshed}
-          onClose={() => setActivePanel(null)}
-          onStartMapPick={startMapPick}
-          onCancelMapPick={cancelMapPick}
-        />
+      {activePanel === 'forms' && (
+        <>
+          {!selectedForm ? (
+            <AvailableForms
+              onSelectForm={handleSelectForm}
+              onClose={() => setActivePanel(null)}
+            />
+          ) : (
+            <DynamicForm
+              form={selectedForm}
+              userId={userId}
+              onSubmitted={handleFormSubmitted}
+              onCancel={() => setSelectedForm(null)}
+              onStartMapPick={startMapPick}
+              onCancelMapPick={cancelMapPick}
+            />
+          )}
+        </>
       )}
 
       {activePanel === 'flag' && (
@@ -195,7 +216,6 @@ export default function CollectorDashboard({
         />
       )}
 
-      {/* 🔥 PROFILE PANEL */}
       {activePanel === 'profile' && (
         <CollectorProfilePanel
           userId={userId}
@@ -206,7 +226,6 @@ export default function CollectorDashboard({
         />
       )}
 
-      {/* 🔥 SETTINGS PANEL (YOUR CODE CONNECTED HERE) */}
       {activePanel === 'settings' && (
         <CollectorSettingsPanel
           onClose={() => setActivePanel(null)}
