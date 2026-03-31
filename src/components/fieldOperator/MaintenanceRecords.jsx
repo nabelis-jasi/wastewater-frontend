@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../supabaseClient';
+import AssetEditor from './AssetEditor';   // <-- import AssetEditor
 
 export default function MaintenanceRecords({ userId }) {
   const [featureType, setFeatureType] = useState('manhole');
@@ -10,6 +11,7 @@ export default function MaintenanceRecords({ userId }) {
   const [message, setMessage] = useState('');
   const [records, setRecords] = useState([]);
   const [showForm, setShowForm] = useState(true);
+  const [showAssetEditor, setShowAssetEditor] = useState(false); // <-- new
   const [formData, setFormData] = useState({
     maintenance_type: 'inspection',
     description: '',
@@ -104,6 +106,14 @@ export default function MaintenanceRecords({ userId }) {
     setSaving(false);
   };
 
+  // Called after AssetEditor successfully submits an edit
+  const handleEditSubmitted = () => {
+    setShowAssetEditor(false);
+    // Refresh asset data to show updated values
+    if (featureId) fetchAsset();
+    // Optionally refresh the whole dashboard
+  };
+
   const getPriorityColor = (priority) => {
     switch (priority) {
       case 'high': return '#dc3545';
@@ -147,6 +157,7 @@ export default function MaintenanceRecords({ userId }) {
     readonly: { backgroundColor: "#f0f0f0", padding: "0.5rem", borderRadius: "6px", color: "#666" },
     button: { padding: "0.5rem 1rem", borderRadius: "6px", border: "none", cursor: "pointer", fontWeight: "bold" },
     submitBtn: { backgroundColor: "#4caf50", color: "white", width: "100%" },
+    editAssetBtn: { backgroundColor: "#2196f3", color: "white", marginTop: "0.5rem", width: "100%" },
     message: { marginTop: "1rem", padding: "0.5rem", borderRadius: "4px", textAlign: "center" },
     recordItem: { border: "1px solid #eee", borderRadius: "8px", padding: "0.75rem", marginBottom: "0.75rem", backgroundColor: "#fafafa" },
     recordHeader: { display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" },
@@ -200,7 +211,10 @@ export default function MaintenanceRecords({ userId }) {
                     <>
                       📍 Location: {asset.location ? `${asset.location.coordinates[1]}, ${asset.location.coordinates[0]}` : 'N/A'}<br />
                       🔧 Condition: {asset.condition_status || 'Unknown'}<br />
-                      🕒 Last Inspection: {asset.last_inspection_date || 'Never'}
+                      🕒 Last Inspection: {asset.last_inspection_date || 'Never'}<br />
+                      📏 Depth: {asset.depth || 'N/A'}<br />
+                      🔽 Invert Level: {asset.invert_level || 'N/A'}<br />
+                      🟫 Ground Level: {asset.ground_level || 'N/A'}
                     </>
                   ) : (
                     <>
@@ -210,6 +224,12 @@ export default function MaintenanceRecords({ userId }) {
                     </>
                   )}
                 </div>
+                <button
+                  style={{ ...styles.button, ...styles.editAssetBtn }}
+                  onClick={() => setShowAssetEditor(true)}
+                >
+                  ✏️ Edit Asset Details
+                </button>
               </div>
             )}
 
@@ -329,6 +349,17 @@ export default function MaintenanceRecords({ userId }) {
           ))
         )}
       </div>
+
+      {/* Asset Editor Modal / Panel */}
+      {showAssetEditor && (
+        <AssetEditor
+          userId={userId}
+          featureType={featureType}
+          featureId={featureId}
+          onEditSubmitted={handleEditSubmitted}
+          onCancel={() => setShowAssetEditor(false)}
+        />
+      )}
     </div>
   );
 }
