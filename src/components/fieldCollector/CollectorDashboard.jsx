@@ -5,6 +5,7 @@ import SyncData from './SyncData';
 import CollectorHome from './CollectorHome';
 import AvailableForms from './AvailableForms';
 import DynamicForm from './DynamicForm';
+import NavigationTool from '../NavigationTool'; 
 import CollectorProfilePanel from './CollectorProfilePanel';
 import CollectorSettingsPanel from './CollectorSettingsPanel';
 
@@ -20,12 +21,15 @@ export default function CollectorDashboard({
   userProfile
 }) {
   const [activePanel, setActivePanel] = useState(null);
-  const [selectedForm, setSelectedForm] = useState(null); // for DynamicForm
+  const [selectedForm, setSelectedForm] = useState(null);
   const [mapInstance, setMapInstance] = useState(null);
 
-  // ── PICK MODE ─────────────────────────────
+  // ── PICK MODE (for forms / flag location picking) ─────────────
   const [pickMode, setPickMode] = useState(false);
   const pickCallbackRef = useRef(null);
+
+  // ── NAVIGATION MODE (for routing) ─────────────────────────────
+  const [navPickMode, setNavPickMode] = useState(false);
 
   const startMapPick = (cb) => {
     pickCallbackRef.current = cb;
@@ -46,13 +50,26 @@ export default function CollectorDashboard({
     setPickMode(false);
   };
 
+  // Navigation tool handlers
+  const handlePickModeChange = (active) => {
+    setNavPickMode(active);
+  };
+
+  const handleNavMapClick = async (lat, lng) => {
+    if (NavigationTool.handleMapClick) {
+      await NavigationTool.handleMapClick(lat, lng);
+    }
+    setNavPickMode(false);
+  };
+
   const handleDataRefreshed = () => {
     onDataRefresh();
   };
 
   const toggle = (id) => {
     setActivePanel(prev => prev === id ? null : id);
-    setSelectedForm(null); // reset when switching panels
+    setSelectedForm(null);
+    if (id !== 'nav') setNavPickMode(false); // turn off nav pick mode when switching away
   };
 
   const handleSelectForm = (form) => {
@@ -66,7 +83,8 @@ export default function CollectorDashboard({
 
   const tools = [
     { id: 'home', icon: '🏠', label: 'Home', color: '#4aad4a' },
-    { id: 'forms', icon: '📋', label: 'Forms', color: '#8fdc00' }, // replaces old 'collect'
+    { id: 'nav', icon: '🧭', label: 'NAV', color: '#22d3ee' },      // new navigation tool
+    { id: 'forms', icon: '📋', label: 'Forms', color: '#8fdc00' },
     { id: 'flag', icon: '🚩', label: 'Flag', color: '#f59e0b' },
     { id: 'sync', icon: '🔄', label: 'Sync', color: '#22d3ee' },
   ];
@@ -74,7 +92,7 @@ export default function CollectorDashboard({
   return (
     <div className="wd-root">
 
-      {/* ── TOP BAR ───────────────────────── */}
+      {/* TOP BAR */}
       <header className="wd-topbar">
         <div className="wd-brand">
           <div className="wd-brand-logo">🦺</div>
@@ -102,42 +120,35 @@ export default function CollectorDashboard({
               <span className="dot dot-lime" /> Pick Mode Active
             </div>
           )}
+          {navPickMode && (
+            <div className="wd-chip" style={{
+              borderColor: 'rgba(143,220,0,0.5)',
+              color: '#8fdc00',
+              animation: 'pulse-dot 0.8s infinite'
+            }}>
+              <span className="dot dot-lime" style={{ animationDuration: '0.5s' }} /> Navigation Mode Active
+            </div>
+          )}
         </div>
 
-        {/* ── ACTIONS ── */}
+        {/* ACTIONS (profile, settings, logout) */}
         <div className="wd-topbar-actions">
-
           <button
             className={`wd-icon-btn${activePanel === 'profile' ? ' active' : ''}`}
             onClick={() => toggle('profile')}
             title="Profile"
-          >
-            👤
-          </button>
-
+          >👤</button>
           <button
             className={`wd-icon-btn${activePanel === 'settings' ? ' active' : ''}`}
             onClick={() => toggle('settings')}
             title="Settings"
-          >
-            ⚙️
-          </button>
-
-          <button
-            className="wd-icon-btn"
-            onClick={onLogout}
-            title="Logout"
-          >
-            ⎋
-          </button>
-
-          <div className="wd-role-pill">
-            {role ?? 'field-collector'}
-          </div>
+          >⚙️</button>
+          <button className="wd-icon-btn" onClick={onLogout} title="Logout">⎋</button>
+          <div className="wd-role-pill">{role ?? 'field-collector'}</div>
         </div>
       </header>
 
-      {/* ── MAP ───────────────────────── */}
+      {/* MAP */}
       <div className="wd-map-wrap">
         <MapView
           manholes={manholes}
@@ -145,12 +156,19 @@ export default function CollectorDashboard({
           role={role}
           userId={userId}
           onMapReady={setMapInstance}
-          navPickMode={pickMode}
-          onNavMapClick={handleMapClick}
+          navPickMode={pickMode || navPickMode}   // pass true if either mode is active
+          onNavMapClick={(lat, lng) => {
+            // Route click to appropriate handler based on active mode
+            if (pickMode && pickCallbackRef.current) {
+              handleMapClick(lat, lng);
+            } else if (navPickMode) {
+              handleNavMapClick(lat, lng);
+            }
+          }}
         />
       </div>
 
-      {/* ── LEFT TOOL RAIL ───────────── */}
+      {/* LEFT TOOL RAIL */}
       <nav className="wd-rail">
         {tools.map((t) => (
           <button
@@ -165,7 +183,7 @@ export default function CollectorDashboard({
         ))}
       </nav>
 
-      {/* ── PANELS ───────────────────── */}
+      {/* PANELS */}
 
       {activePanel === 'home' && (
         <CollectorHome
@@ -173,6 +191,14 @@ export default function CollectorDashboard({
           pipes={pipes}
           onClose={() => setActivePanel(null)}
           onNavigate={toggle}
+        />
+      )}
+
+      {activePanel === 'nav' && (
+        <NavigationTool
+          map={mapInstance}
+          onClose={() => { setActivePanel(null); setNavPickMode(false); }}
+          onPickModeChange={handlePickModeChange}
         />
       )}
 
