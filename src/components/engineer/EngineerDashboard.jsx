@@ -5,7 +5,7 @@ import DataEditor from './DataEditor';
 import ShapefileUploader from './ShapefileUploader';
 import DataSync from './DataSync';
 import FlagManager from './FlagManager';
-import NavigationTool from './NavigationTool';
+// import NavigationTool from './NavigationTool';   // <-- removed
 import HomePanel from './HomePanel';
 import ProfilePanel from './ProfilePanel';
 import SettingsPanel from './SettingsPanel';
@@ -18,7 +18,7 @@ import './Dashboard.css';
 export default function EngineerDashboard({ manholes, pipes, userId, role, onDataRefresh, userProfile }) {
   const [activePanel, setActivePanel] = useState(null);
   const [selectedFeature, setFeature] = useState(null);
-  const [selectedForm, setSelectedForm] = useState(null); // for editing a form
+  const [selectedForm, setSelectedForm] = useState(null);
   const [mapInstance, setMapInstance] = useState(null);
   const [pendingEditCount, setPendingEditCount] = useState(0);
 
@@ -32,21 +32,6 @@ export default function EngineerDashboard({ manholes, pipes, userId, role, onDat
     setPendingEditCount(count ?? 0);
   };
 
-  // Navigation pick-mode bridge
-  const [navPickMode, setNavPickMode] = useState(false);
-  const navToolRef = useRef(null);
-
-  const handlePickModeChange = (active, idx) => {
-    setNavPickMode(active);
-  };
-
-  const handleNavMapClick = async (lat, lng) => {
-    if (NavigationTool.handleMapClick) {
-      await NavigationTool.handleMapClick(lat, lng);
-    }
-    setNavPickMode(false);
-  };
-
   const handleFeatureClick = (feature) => {
     setFeature(feature);
     setActivePanel('editor');
@@ -54,7 +39,7 @@ export default function EngineerDashboard({ manholes, pipes, userId, role, onDat
 
   const toggle = (id) => {
     setActivePanel(prev => prev === id ? null : id);
-    setSelectedForm(null); // reset when switching panels
+    setSelectedForm(null);
   };
 
   const handleSelectForm = (form) => {
@@ -64,13 +49,12 @@ export default function EngineerDashboard({ manholes, pipes, userId, role, onDat
 
   const handleFormSaved = () => {
     setSelectedForm(null);
-    onDataRefresh(); // optional
+    onDataRefresh();
   };
 
-  // Tool rail definitions
+  // Tool rail definitions – removed 'nav'
   const tools = [
     { id: 'home',        icon: '🏠', label: 'Home',        color: '#4aad4a', desc: 'Overview & stats' },
-    { id: 'nav',         icon: '🧭', label: 'Navigate',    color: '#22d3ee', desc: 'GPS routing' },
     { id: 'editor',      icon: '✏️', label: 'Edit',        color: '#8fdc00', desc: 'Edit manhole/pipeline' },
     { id: 'uploader',    icon: '📤', label: 'Upload',      color: '#4aad4a', desc: 'Import shapefile' },
     { id: 'sync',        icon: '🔄', label: 'Sync',        color: '#22d3ee', desc: 'Push / pull data' },
@@ -99,11 +83,7 @@ export default function EngineerDashboard({ manholes, pipes, userId, role, onDat
           <div className="wd-chip"><span className="dot dot-green" />{manholes?.length ?? 0} Manholes</div>
           <div className="wd-chip"><span className="dot dot-lime"  />{pipes?.length    ?? 0} Pipelines</div>
           <div className="wd-chip"><span className="dot dot-amber" />Live</div>
-          {navPickMode && (
-            <div className="wd-chip" style={{ borderColor: 'rgba(143,220,0,0.5)', color: '#8fdc00', animation: 'pulse-dot 0.8s infinite' }}>
-              <span className="dot dot-lime" style={{ animationDuration: '0.5s' }} /> Pick Mode Active
-            </div>
-          )}
+          {/* Removed navPickMode chip */}
         </div>
 
         <div className="wd-topbar-actions">
@@ -124,8 +104,7 @@ export default function EngineerDashboard({ manholes, pipes, userId, role, onDat
           userId={userId}
           onFeatureClick={handleFeatureClick}
           onMapReady={setMapInstance}
-          navPickMode={navPickMode}
-          onNavMapClick={handleNavMapClick}
+          // Removed navPickMode and onNavMapClick props
         />
       </div>
 
@@ -133,7 +112,7 @@ export default function EngineerDashboard({ manholes, pipes, userId, role, onDat
       <nav className="wd-rail">
         {tools.map((t, i) => (
           <React.Fragment key={t.id}>
-            {i === 2 && <div className="wd-rail-sep" />}
+            {i === 1 && <div className="wd-rail-sep" />}  {/* separator after home, now after first tool */}
             <button
               className={`wd-rail-btn${activePanel === t.id ? ' active' : ''}`}
               style={{ '--rail-color': t.color }}
@@ -179,14 +158,6 @@ export default function EngineerDashboard({ manholes, pipes, userId, role, onDat
         />
       )}
 
-      {activePanel === 'nav' && (
-        <NavigationTool
-          map={mapInstance}
-          onClose={() => { setActivePanel(null); setNavPickMode(false); }}
-          onPickModeChange={handlePickModeChange}
-        />
-      )}
-
       {activePanel === 'editor' && (
         <DataEditor
           feature={selectedFeature}
@@ -219,22 +190,22 @@ export default function EngineerDashboard({ manholes, pipes, userId, role, onDat
 
       {/* FORMS: list or builder */}
       {activePanel === 'formBuilder' && (
-  <>
-    {!selectedForm ? (
-      <FormList
-        onSelectForm={handleSelectForm}
-        onClose={() => setActivePanel(null)}
-        onCreateNew={() => setSelectedForm({})}
-      />
-    ) : (
-      <FormBuilder
-        form={selectedForm}
-        onSaved={handleFormSaved}
-        onCancel={() => setSelectedForm(null)}
-      />
-    )}
-  </>
-)}
+        <>
+          {!selectedForm ? (
+            <FormList
+              onSelectForm={handleSelectForm}
+              onClose={() => setActivePanel(null)}
+              onCreateNew={() => setSelectedForm({})}
+            />
+          ) : (
+            <FormBuilder
+              form={selectedForm}
+              onSaved={handleFormSaved}
+              onCancel={() => setSelectedForm(null)}
+            />
+          )}
+        </>
+      )}
 
       {/* SUBMISSIONS REVIEW */}
       {activePanel === 'submissions' && (
